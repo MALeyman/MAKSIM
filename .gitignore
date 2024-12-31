@@ -2,3 +2,4 @@
 .ipynb_checkpoints/
 requirements.txt
 SQL/bd/
+SQL/__pycache__/

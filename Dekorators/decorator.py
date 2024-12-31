@@ -24,10 +24,12 @@ def secret_resource() -> str:
 
 # Пример использования
 if __name__ == "__main__":
+    print("\n")
     # Пример 1: Пользователь с ролью admin
     user_role = "admin"
     print(secret_resource())  # Ожидаемый вывод: Permission accepted
-
+    print("\n")
     # Пример 2: Пользователь с ролью manager
     user_role = "manager"
     print(secret_resource())  # Ожидаемый вывод: Permission denied
+    print("\n")
