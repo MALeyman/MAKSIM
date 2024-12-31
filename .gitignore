@@ -1,3 +1,4 @@
-.myenv/
+.zala/
 .ipynb_checkpoints/
 requirements.txt
+SQL/bd/
