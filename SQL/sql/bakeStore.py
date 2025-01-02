@@ -9,7 +9,6 @@ from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey, Date, DECIMAL, func
 
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -102,6 +101,7 @@ def display_results(title, results, enumerate_results=False):
 
 
 if __name__ == '__main__':
+    print()
     main()
 
 
