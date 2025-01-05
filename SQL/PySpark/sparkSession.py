@@ -14,7 +14,7 @@ def get_spark_session():
     """
     spark = SparkSession.builder \
         .appName("BikeStore Queries") \
-        .config("spark.jars", "/home/maksim/.local/share/DBeaverData/drivers/maven/maven-central/org.postgresql/postgresql-42.7.2.jar") \
+        .config("spark.jars", "/home/maksim/Документы/libs/postgresql-42.7.4.jar") \
         .getOrCreate()
     return spark
 

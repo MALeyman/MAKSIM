@@ -1,6 +1,8 @@
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, count
+from pyspark.sql.functions import year, month, sum
+from pyspark.sql import functions as F
 
 class BikeStoreQueries:
     def __init__(self, spark, db_url, db_properties):
@@ -97,3 +99,76 @@ class BikeStoreQueries:
                          .agg(count(orders.order_id).alias("order_count")) \
                          .filter(col("order_count") > 0)
         return query
+
+    def get_total_sales_per_product(self):
+        """
+        Расчет общего объема продаж по каждому продукту.
+        """
+        products = self.load_table("products")
+        order_items = self.load_table("order_items")  # Мы предполагаем, что у нас есть таблица order_items
+        query = order_items.join(products, order_items.product_id == products.product_id) \
+                        .select(order_items.quantity, order_items.list_price, products.product_name, order_items.discount) \
+                        .withColumn("total_sales", (order_items.quantity * order_items.list_price * (1 - order_items.discount)))
+        total_sales_query = query.groupBy("product_name").agg(sum("total_sales").alias("total_sales"))
+        return total_sales_query
+
+    def get_order_count_by_status(self):
+        """
+        Расчет количества заказов по каждому статусу заказа.
+        """
+        orders = self.load_table("orders")
+        query = orders.groupBy("order_status").agg(count(orders.order_id).alias("order_count"))
+        return query
+
+
+    def get_total_sales_per_month(self):
+        """
+        Расчет общей суммы продаж за каждый месяц.
+        """
+        orders = self.load_table("orders")
+        order_items = self.load_table("order_items")
+        products = self.load_table("products")
+        
+        # Присоединим таблицы, чтобы получить цену и количество для каждого заказа
+        query = order_items.join(orders, order_items.order_id == orders.order_id) \
+                            .join(products, order_items.product_id == products.product_id) \
+                            .select(orders.order_date, order_items.quantity, order_items.list_price, order_items.discount) \
+                            .withColumn("total_sales", (order_items.quantity * order_items.list_price * (1 - order_items.discount))) \
+                            .withColumn("year", F.year("order_date")) \
+                            .withColumn("month", F.month("order_date"))
+        
+        # Группируем по месяцу и году
+        total_sales_query = query.groupBy("year", "month").agg(F.sum("total_sales").alias("total_sales"))
+        
+        # Сортируем по году, а затем по месяцу
+        sorted_sales_query = total_sales_query.orderBy("year", "month")
+        
+        return sorted_sales_query
+
+
+    from pyspark.sql.functions import sum
+
+    def get_top_5_customers_by_spending(self):
+        """
+        Топ 5 клиентов, которые потратили больше всего денег.
+        """
+        orders = self.load_table("orders")
+        order_items = self.load_table("order_items")
+        customers = self.load_table("customers")
+        products = self.load_table("products")
+        
+        # Присоединим таблицы, чтобы получить цены и количества товаров
+        query = order_items.join(orders, order_items.order_id == orders.order_id) \
+                        .join(products, order_items.product_id == products.product_id) \
+                        .join(customers, orders.customer_id == customers.customer_id) \
+                        .select(customers.first_name, customers.last_name, order_items.quantity, order_items.list_price, order_items.discount) \
+                        .withColumn("total_spent", (order_items.quantity * order_items.list_price * (1 - order_items.discount)))
+        
+        # Суммируем расходы по каждому клиенту и сортируем по убыванию
+        total_spent_query = query.groupBy("first_name", "last_name").agg(sum("total_spent").alias("total_spent")) \
+                                .orderBy(col("total_spent").desc())
+        
+        return total_spent_query.limit(5)
+
+    
+    
