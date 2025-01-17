@@ -20,6 +20,7 @@ def get_spark_session():
 
 
 
+
 if __name__ == "__main__":
 
     # Пример запроса с использованием JDBC
