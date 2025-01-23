@@ -20,8 +20,8 @@ def main():
     try:
         # Подключение к базе данных через SQLAlchemy
         engine = create_engine('postgresql://postgres:postgres@localhost/BikeStore')
-        Session = sessionmaker(bind=engine)
-        session = Session()
+        session1 = sessionmaker(bind=engine)
+        session = session1()
 
         bike_store_queries = BikeStoreQueries(session)
 
@@ -101,7 +101,7 @@ def display_results(title, results, enumerate_results=False):
 
 
 if __name__ == '__main__':
-    print()
+    print("Начали!")
     main()
 
 

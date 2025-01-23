@@ -4,3 +4,5 @@ requirements.txt
 SQL/bd/
 SQL/__pycache__/
 SQL/PySpark/__pycache__/
+.idea/
+SQL/sql/__pycache__/
