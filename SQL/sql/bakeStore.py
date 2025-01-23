@@ -102,6 +102,7 @@ def display_results(title, results, enumerate_results=False):
 
 if __name__ == '__main__':
     print("Начали!")
+    
     main()
-
+    print("Закончили!")
 
