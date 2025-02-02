@@ -6,3 +6,4 @@ SQL/__pycache__/
 SQL/PySpark/__pycache__/
 .idea/
 SQL/sql/__pycache__/
+tests/__pycache__/
