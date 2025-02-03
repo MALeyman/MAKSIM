@@ -29,7 +29,7 @@ class CreditCard:
     def charge(self, amount: float):
         if amount > 1000:
             raise ValueError("Сумма списания превышает лимит")
-        print(f"Charging ${amount} to card {self.card_number}")
+        print(f"Списание ${amount} с карты{self.card_number}")
         return True
 
 
@@ -40,9 +40,9 @@ class PaymentForm:
 
     def pay(self, amount: float):
         if self.credit_card.charge(amount):
-            return f"Payment of ${amount} was successful!"
+            return f"Платёж ${amount} прошёл успешно!"
         else:
-            return "Payment failed."
+            return "Платёж не прошёл"
 
 
 class TestPaymentForm(unittest.TestCase):
@@ -93,7 +93,7 @@ class TestPaymentForm(unittest.TestCase):
         result = payment_form.pay(amount)
 
         mock_card.charge.assert_called_once_with(amount)
-        self.assertEqual(result, f"Payment of ${amount} was successful!")
+        self.assertEqual(result, f"Платёж ${amount} прошёл успешно!")
 
     # Отрицательный тест для метода pay
     def test_failed_payment(self):
@@ -105,7 +105,7 @@ class TestPaymentForm(unittest.TestCase):
         result = payment_form.pay(amount)
 
         mock_card.charge.assert_called_once_with(amount)
-        self.assertEqual(result, "Payment failed.")
+        self.assertEqual(result, "Платёж не прошёл")
 
     # Тест для вызова charge в pay
     def test_charge_called_in_pay(self):
