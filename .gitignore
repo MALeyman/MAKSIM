@@ -10,3 +10,7 @@ tests/__pycache__/
 web_scraping/dataset/
 dataset/
 certification/output/
+Python/certification/output/
+Python/tests/__pycache__/
+Python/SQL/sql/__pycache__/
+Python/SQL/PySpark/__pycache__/
