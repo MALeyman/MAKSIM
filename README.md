@@ -84,7 +84,7 @@
 3. [G_code](https://github.com/drug173/C/tree/main/G_code) - преобразование текстового файла с кодом программирование станка с ЧПУ (G-code) (тестовое задание).
 
 
-### [CSharp:](https://github.com/drug173/C-)  
+### [C#:](https://github.com/drug173/C-)  
 
 
 
