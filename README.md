@@ -12,11 +12,10 @@
 
 - В прошлом военнослужащий, ветеран боевых действий.
 
-- Участник обласных, победитель районных олимпиад в Челябинской области, по физике, математике.
 
 - Окончил ___ЮФУ___   и  ___ИКТИБ___.   
   
-- <img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30">Начинающий разработчик.
+- <img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30">RPA Разработчик.
 
 - :seedling: Изучаю нейронные сети, машинное обучение, ___BigData___.
 
