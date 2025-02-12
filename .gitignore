@@ -15,3 +15,4 @@ Python/tests/__pycache__/
 Python/SQL/sql/__pycache__/
 Python/SQL/PySpark/__pycache__/
 ML/Linear_Regression/linear_regression_2.ipynb
+ML/Linear_Regression/submission.csv
