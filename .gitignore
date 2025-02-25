@@ -16,3 +16,8 @@ Python/SQL/sql/__pycache__/
 Python/SQL/PySpark/__pycache__/
 ML/Linear_Regression/linear_regression_2.ipynb
 ML/Linear_Regression/submission.csv
+ML/Polinom_regression/polynomial_regression_weights.pth
+ML/Polinom_regression/polynomial_model_full.pth
+ML/4_SVM/smoking_data/
+ML/regularisation/2submission.csv
+ML/Polinom_regression/polinom_regression copy.ipynb
