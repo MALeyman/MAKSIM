@@ -23,3 +23,8 @@ ML/regularisation/2submission.csv
 ML/Polinom_regression/polinom_regression copy.ipynb
 ML/5_SVM_regress/submission.csv
 ML/9_RCA/train.csv
+ML/11_Hierarchy/train.csv
+ML/10_k_means/train.csv
+ML/10_k_means/train_clustered.csv
+ML/13_gradient_1/dataset_smoking/
+ML/12_Random_forest/dataset_smoking/
