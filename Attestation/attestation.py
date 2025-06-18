@@ -447,89 +447,83 @@ def visualize_image_and_mask(image, mask, class_palette):
 
 
 
-
-
-
-
-
-
-def visualize_image_and_mask3(image, mask, class_palette):
-    """ 
-        Визуализвция изображения с масками
-    """
+# def visualize_image_and_mask3(image, mask, class_palette):
+#     """ 
+#         Визуализвция изображения с масками
+#     """
 
         
-    if isinstance(mask, torch.Tensor):
-        mask_np = mask.cpu().numpy()
-    elif isinstance(mask, np.ndarray):
-        mask_np = mask
-    else:
-        # Если mask PIL Image, конвертируем в numpy
-        mask_np = np.array(mask)
+#     if isinstance(mask, torch.Tensor):
+#         mask_np = mask.cpu().numpy()
+#     elif isinstance(mask, np.ndarray):
+#         mask_np = mask
+#     else:
+#         # Если mask PIL Image, конвертируем в numpy
+#         mask_np = np.array(mask)
 
-    # Создаём копию маски для отображения
-    mask_vis = mask_np.copy()
+#     # Создаём копию маски для отображения
+#     mask_vis = mask_np.copy()
     
-    # Заменяем 255 (ignore) на 0 или другой индекс, например фон
-    mask_vis[mask_vis == 255] = 19
+#     # Заменяем 255 (ignore) на 0 или другой индекс, например фон
+#     mask_vis[mask_vis == 255] = 19
     
-    # Применяем палитру
-    color_mask = class_palette[mask_vis]
+#     # Применяем палитру
+#     color_mask = class_palette[mask_vis]
     
-    # Отображение
-    import matplotlib.pyplot as plt
+#     # Отображение
+#     import matplotlib.pyplot as plt
     
-    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
-    axs[0].imshow(image)
-    axs[0].set_title('Image')
-    axs[0].axis('off')
+#     fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+#     axs[0].imshow(image)
+#     axs[0].set_title('Image')
+#     axs[0].axis('off')
     
-    axs[1].imshow(color_mask)
-    axs[1].set_title('Mask')
-    axs[1].axis('off')
+#     axs[1].imshow(color_mask)
+#     axs[1].set_title('Mask')
+#     axs[1].axis('off')
     
-    plt.show()
+#     plt.show()
 
 
 
 
-def visualize_image_and_mask2(image, mask, class_palette):
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import torch
+# def visualize_image_and_mask2(image, mask, class_palette):
+#     import matplotlib.pyplot as plt
+#     import numpy as np
+#     import torch
 
-    if isinstance(image, torch.Tensor):
-        mean = torch.tensor([0.485, 0.456, 0.406], device=image.device).view(3,1,1)
-        std = torch.tensor([0.229, 0.224, 0.225], device=image.device).view(3,1,1)
+#     if isinstance(image, torch.Tensor):
+#         mean = torch.tensor([0.485, 0.456, 0.406], device=image.device).view(3,1,1)
+#         std = torch.tensor([0.229, 0.224, 0.225], device=image.device).view(3,1,1)
 
-        image = image * std + mean  # правильная денормализация
-        image = image.clamp(0, 1)
-        image = image.permute(1, 2, 0).cpu().numpy()
-        image = (image * 255).astype(np.uint8)
+#         image = image * std + mean  # правильная денормализация
+#         image = image.clamp(0, 1)
+#         image = image.permute(1, 2, 0).cpu().numpy()
+#         image = (image * 255).astype(np.uint8)
 
-    mask_np = mask.cpu().numpy() if isinstance(mask, torch.Tensor) else mask
+#     mask_np = mask.cpu().numpy() if isinstance(mask, torch.Tensor) else mask
 
-    if isinstance(mask, torch.Tensor):
-        mask_np = mask.cpu().numpy()
-    elif isinstance(mask, np.ndarray):
-        mask_np = mask
-    else:
-        # Если mask PIL Image, конвертируем в numpy
-        mask_np = np.array(mask)
-    mask_vis = mask_np.copy()
-    mask_vis[mask_vis == 255] = 19  # ignore -> фон
-    color_mask = class_palette[mask_vis.squeeze()]
+#     if isinstance(mask, torch.Tensor):
+#         mask_np = mask.cpu().numpy()
+#     elif isinstance(mask, np.ndarray):
+#         mask_np = mask
+#     else:
+#         # Если mask PIL Image, конвертируем в numpy
+#         mask_np = np.array(mask)
+#     mask_vis = mask_np.copy()
+#     mask_vis[mask_vis == 255] = 19  # ignore -> фон
+#     color_mask = class_palette[mask_vis.squeeze()]
 
-    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
-    axs[0].imshow(image)
-    axs[0].set_title('Image')
-    axs[0].axis('off')
+#     fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+#     axs[0].imshow(image)
+#     axs[0].set_title('Image')
+#     axs[0].axis('off')
 
-    axs[1].imshow(color_mask)
-    axs[1].set_title('Mask')
-    axs[1].axis('off')
+#     axs[1].imshow(color_mask)
+#     axs[1].set_title('Mask')
+#     axs[1].axis('off')
 
-    plt.show()
+#     plt.show()
 
 
 
@@ -546,6 +540,8 @@ def decode_segmap(mask, colormap):
         color_mask[mask == cls_id] = colormap[cls_id]
     return color_mask
 
+  
+# Функция визуализации
 def visualize_segmentation(image_pil, pred_mask, colormap, alpha=0.5):
     """
     image_pil: PIL.Image — исходное изображение
@@ -592,6 +588,29 @@ def visualize_segmentation(image_pil, pred_mask, colormap, alpha=0.5):
     plt.axis('off')
 
     plt.show()
+
+# Предсказание модели
+def prediction_mask(path_img, model):
+    """ 
+        Сегментация изображения
+        path_img: путь к изображению
+        model: модель
+    """
+    img = Image.open(path_img)
+    preprocess = transforms.Compose([
+        transforms.Resize((256, 512)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    img_tensor = preprocess(img).unsqueeze(0) 
+
+    with torch.no_grad():
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        img_tensor = img_tensor.to(device) 
+        output = model(img_tensor)
+        prediction = torch.argmax(output, dim=1) 
+        return img, prediction
+
 
 
 # Объединение датасета
@@ -774,6 +793,5 @@ def train_model(model, train_loader, val_loader, optimizer, device, num_epochs=2
     plt.title('IoU over epochs')
 
     plt.show()
-
 
 
