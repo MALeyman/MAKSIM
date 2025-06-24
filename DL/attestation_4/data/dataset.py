@@ -16,6 +16,45 @@ import torch
 from skimage import io
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
+import cv2
+
+
+
+class FaceKeypointsDataset2(Dataset):
+    def __init__(self, csv_file, root_dir, transform=None, img_size=(224, 224)):
+        self.keypoints_frame = pd.read_csv(csv_file)
+        self.root_dir = root_dir
+        self.transform = transform
+        self.img_size = img_size
+
+    def __len__(self):
+        return len(self.keypoints_frame)
+
+    def __getitem__(self, idx):
+        img_name = os.path.join(self.root_dir, self.keypoints_frame.iloc[idx, 0])
+        image = Image.open(img_name).convert('RGB')
+        image_np = np.array(image)
+        orig_h, orig_w = image_np.shape[:2]
+
+        keypoints = self.keypoints_frame.iloc[idx, 1:].values.astype('float').reshape(-1, 2)
+
+        if self.transform:
+            augmented = self.transform(image=image_np, keypoints=keypoints)
+            image_np = augmented['image']
+            keypoints = np.array(augmented['keypoints'])
+        else:
+            image_np = cv2.resize(image_np, self.img_size)
+            scale_x = self.img_size[0] / orig_w
+            scale_y = self.img_size[1] / orig_h
+            keypoints[:, 0] *= scale_x
+            keypoints[:, 1] *= scale_y
+
+        image_tensor = transforms.ToTensor()(image_np)
+
+        sample = {'image': image_tensor, 'keypoints': keypoints}
+        return sample
+
+
 
 # Датасет ключевых точек лица
 class FaceKeypointsDataset(Dataset):
@@ -50,7 +89,6 @@ class FaceKeypointsDataset(Dataset):
             image = transforms.ToTensor()(image)
         
         # print(image.shape)
-
         keypoints[:, 0] = keypoints[:, 0] * (new_w / orig_w)
         keypoints[:, 1] = keypoints[:, 1] * (new_h / orig_h)
         sample = {'image': image, 'keypoints': keypoints}

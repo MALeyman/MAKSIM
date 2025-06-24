@@ -1,0 +1,6 @@
+path: /home/maksim/develops/python/MAKSIM/DL/attestation_4/dataset/dataset_detect_2/
+train: images/train         # Папка с тренировочными изображениями
+val: images/val              # Папка с валидационными изображениями
+
+nc: 1  # Количество классов 
+names: ['face']
