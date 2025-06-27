@@ -23,6 +23,10 @@ import random, numpy as np, torch
 from PIL import Image, ImageEnhance
 import torchvision.transforms.functional as TF
 
+import onnxruntime as ort
+import numpy as np
+from PIL import Image
+
 
 
 
@@ -173,4 +177,35 @@ def merge_folders(src_root, dst_folder):
                         dst_file = os.path.join(dst_folder, f"{split}_{city}_{base}{ext}")
                     shutil.copy2(src_file, dst_file)
 
+
+
+def preprocess_image_onnx(path_img, input_size=(512, 256)):
+    img = Image.open(path_img).convert('RGB')
+    img = img.resize(input_size)  
+    img_np = np.array(img).astype(np.float32) / 255.0
+
+    # Нормализация ImageNet
+    mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+    std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+    img_np = (img_np - mean) / std
+
+    # HWC -> CHW
+    img_np = img_np.transpose(2, 0, 1)
+
+    # Добавляем batch dimension
+    img_np = np.expand_dims(img_np, axis=0)
+
+    return img, img_np
+
+def prediction_mask_onnx(path_img, onnx_session):
+    img, img_np = preprocess_image_onnx(path_img)
+
+    
+    input_name = onnx_session.get_inputs()[0].name
+    outputs = onnx_session.run(None, {input_name: img_np})
+
+    # outputs[0] — выход модели, shape (1, num_classes, H, W)
+    pred_mask = np.argmax(outputs[0], axis=1)[0]  # (H, W)
+
+    return img, pred_mask
 
