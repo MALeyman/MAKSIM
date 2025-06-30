@@ -4,8 +4,8 @@ import numpy as np
 from PIL import Image
 import os
 import gradio as gr
-from gradio_projects.projects.segmentation_1 import get_segmentation_tab
-from gradio_projects.projects.home_tab import home_tab
+from projects.segmentation_1 import get_segmentation_tab
+from projects.home_tab import home_tab
 
 def main():
     with gr.Blocks() as demo:
