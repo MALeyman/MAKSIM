@@ -36,7 +36,6 @@ def train_model(model, train_loader, val_loader, optimizer, device, num_epochs=2
     best_model_wts = copy.deepcopy(model.state_dict())
 
     def iou_score(pred, target, n_classes=19):
-        # Предполагается, что pred и target — тензоры (N,H,W) с классами
         ious = []
         pred = pred.view(-1)
         target = target.view(-1)
@@ -142,7 +141,7 @@ def train_model(model, train_loader, val_loader, optimizer, device, num_epochs=2
         val_ious.append(val_epoch_iou)
 
         print(f"Epoch {epoch} summary: Train Loss: {epoch_loss:.4f}, Acc: {epoch_acc:.4f}, IoU: {epoch_iou:.4f} | Val Loss: {val_epoch_loss:.4f}, Acc: {val_epoch_acc:.4f}, IoU: {val_epoch_iou:.4f}")
-        # Сохраняем модель, если улучшился val IoU
+        # Сохраняем модель
         if val_epoch_iou > best_val_iou:
             best_val_iou = val_epoch_iou
             best_model_wts = copy.deepcopy(model.state_dict())
@@ -154,7 +153,7 @@ def train_model(model, train_loader, val_loader, optimizer, device, num_epochs=2
             
     # Восстанавливаем лучшие веса
     model.load_state_dict(best_model_wts)
-    # Построение графиков
+
     epochs = range(1, num_epochs+1)
 
     plt.figure(figsize=(18,5))

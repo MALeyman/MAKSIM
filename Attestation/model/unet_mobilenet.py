@@ -102,7 +102,7 @@ class UNet(nn.Module):
         P3 = self.conv4(P3)
 
         out = self.oup(P3)
-        # print(f"out  {out.shape}")
+       
         return out
     
 

@@ -53,6 +53,9 @@ def prediction_mask(path_img, model):
 
 # Препроцесс для ONNX 
 def preprocess_image_onnx(path_img, input_size=(512, 256)):
+    """ 
+    Загрузка изображения и препроцессинг
+    """
 
     img = Image.open(path_img).convert('RGB')
     preprocess = transforms.Compose([
