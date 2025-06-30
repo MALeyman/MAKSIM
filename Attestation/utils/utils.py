@@ -39,6 +39,54 @@ def emty_cache():
     torch.cuda.empty_cache()
 
 
+# Преобразует маску в цветное изображение
+def mask_to_rgb(mask, class_palette):
+    """Преобразует маску в цветное изображение по палитре Cityscapes."""
+    if hasattr(mask, 'cpu'):
+        mask = mask.cpu().numpy()
+    return class_palette[mask]
+
+
+# денормализация изображения
+def denormalize(image):
+    """Денормализует изображение."""
+    mean = np.array([0.485, 0.456, 0.406]).reshape(3,1,1)
+    std = np.array([0.229, 0.224, 0.225]).reshape(3,1,1)
+    return np.clip((image * std) + mean, 0, 1)
+
+
+def show_images_and_masks(images, masks, class_palette, num=2):
+    """
+    Выводит num пар: нормализованное изображение, денормализованное изображение,
+    цветная маска и маска в оттенках серого.
+    """
+    for i in range(min(num, len(images))):
+        image = images[i].cpu().numpy() if hasattr(images[i], 'cpu') else images[i]
+        mask = masks[i].cpu().numpy() if hasattr(masks[i], 'cpu') else masks[i]
+        denorm_image = denormalize(image)
+        mask_rgb = mask_to_rgb(mask, class_palette)
+
+        fig, axes = plt.subplots(1, 4, figsize=(22, 7))
+        axes[0].imshow(np.transpose(image, (1, 2, 0)))
+        axes[0].set_title('Normalized Image')
+        axes[0].axis('off')
+
+        axes[1].imshow(np.transpose(denorm_image, (1, 2, 0)))
+        axes[1].set_title('Denormalized Image')
+        axes[1].axis('off')
+
+        axes[2].imshow(mask_rgb)
+        axes[2].set_title('Mask (colored)')
+        axes[2].axis('off')
+
+        axes[3].imshow(mask, cmap='gray', vmin=0, vmax=19)
+        axes[3].set_title('Mask (gray)')
+        axes[3].axis('off')
+
+        plt.tight_layout()
+        plt.show()
+
+
 
 # #########################  Визуализация изображений
 def visualize_image_and_mask(image, mask, class_palette):
@@ -104,7 +152,7 @@ def decode_segmap(mask, colormap):
         color_mask[mask == cls_id] = colormap[cls_id]
     return color_mask
 
-  
+
 # Функция визуализации
 def visualize_segmentation(image_pil, pred_mask, colormap, alpha=0.5):
     """
@@ -154,8 +202,6 @@ def visualize_segmentation(image_pil, pred_mask, colormap, alpha=0.5):
     plt.show()
 
 
-
-
 # Объединение датасета
 def merge_folders(src_root, dst_folder):
     """ 
@@ -179,33 +225,5 @@ def merge_folders(src_root, dst_folder):
 
 
 
-def preprocess_image_onnx(path_img, input_size=(512, 256)):
-    img = Image.open(path_img).convert('RGB')
-    img = img.resize(input_size)  
-    img_np = np.array(img).astype(np.float32) / 255.0
 
-    # Нормализация ImageNet
-    mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-    std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-    img_np = (img_np - mean) / std
-
-    # HWC -> CHW
-    img_np = img_np.transpose(2, 0, 1)
-
-    # Добавляем batch dimension
-    img_np = np.expand_dims(img_np, axis=0)
-
-    return img, img_np
-
-def prediction_mask_onnx(path_img, onnx_session):
-    img, img_np = preprocess_image_onnx(path_img)
-
-    
-    input_name = onnx_session.get_inputs()[0].name
-    outputs = onnx_session.run(None, {input_name: img_np})
-
-    # outputs[0] — выход модели, shape (1, num_classes, H, W)
-    pred_mask = np.argmax(outputs[0], axis=1)[0]  # (H, W)
-
-    return img, pred_mask
 
