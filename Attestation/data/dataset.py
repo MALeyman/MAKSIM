@@ -213,7 +213,7 @@ class CustomAugmentationsNumPy:
         p_hflip=0.0,
         p_brightness=0.0,
         p_noise=0.0,
-        p_swap_channels=0.0,  # Вероятность смены каналов
+        p_swap_channels=0.0,  
         p_contrast=0.0,
         p_saturation=0.0
 
@@ -225,7 +225,7 @@ class CustomAugmentationsNumPy:
         self.p_flip = p_flip
         self.p_brightness = p_brightness
         self.p_noise = p_noise
-        self.p_swap_channels = p_swap_channels  # Новый параметр
+        self.p_swap_channels = p_swap_channels  
         self.p_contrast = p_contrast
         self.p_saturation = p_saturation
         self.p_hflip = p_hflip
@@ -280,7 +280,7 @@ class CustomAugmentationsNumPy:
             factor = random.uniform(0.5, 1.5)
             img_np = np.clip(img_np * factor, 0, 1)
 
-        if random.random() < self.p_swap_channels:   # Смена каналов RGB <-> BGR (до ресайза)
+        if random.random() < self.p_swap_channels:   # Смена каналов RGB <-> BGR 
             # Для формата CHW (каналы, высота, ширина)
             img_np = img_np[::-1, :, :].copy()  # Инвертирование порядка каналов
 
