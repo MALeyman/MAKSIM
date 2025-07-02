@@ -1,7 +1,6 @@
 
-
-
-import numpy as np
+import pandas as pd
+from IPython.display import display
 import os
 import shutil
 from PIL import Image
@@ -15,14 +14,11 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import copy
 import gc
-
 import torchvision.transforms as T
 import random
-
 import random, numpy as np, torch
 from PIL import Image, ImageEnhance
 import torchvision.transforms.functional as TF
-
 import onnxruntime as ort
 import numpy as np
 from PIL import Image
@@ -57,7 +53,7 @@ def denormalize(image):
 
 def show_images_and_masks(images, masks, class_palette, num=2):
     """
-    Выводит num пар: нормализованное изображение, денормализованное изображение,
+    Выводит num: нормализованное изображение, денормализованное изображение,
     цветная маска и маска в оттенках серого.
     """
     for i in range(min(num, len(images))):
@@ -98,7 +94,7 @@ def visualize_image_and_mask(image, mask, class_palette):
     import torch
     import matplotlib.pyplot as plt
 
-    # --- Обработка изображения ---
+    #   Обработка изображения 
     if isinstance(image, torch.Tensor):
         # PyTorch Tensor: [C, H, W] -> [H, W, C] + денормализация
         mean = torch.tensor([0.485, 0.456, 0.406], device=image.device).view(3,1,1)
@@ -113,12 +109,11 @@ def visualize_image_and_mask(image, mask, class_palette):
     elif isinstance(image, np.ndarray):
         # OpenCV: BGR -> RGB
         if image.ndim == 3 and image.shape[2] == 3:
-            # Обычно OpenCV-изображения в BGR, а matplotlib ожидает RGB
             image = image[..., ::-1]
     else:
         raise TypeError(f"Неподдерживаемый тип изображения: {type(image)}")
 
-    # --- Обработка маски ---
+    #    Обработка маски 
     if isinstance(mask, torch.Tensor):
         mask_np = mask.cpu().numpy()
     elif isinstance(mask, np.ndarray):
@@ -128,10 +123,10 @@ def visualize_image_and_mask(image, mask, class_palette):
         mask_np = np.array(mask)
 
     mask_vis = mask_np.copy()
-    mask_vis[mask_vis == 255] = 19  # ignore -> фон (или другой индекс, если требуется)
+    mask_vis[mask_vis == 255] = 19  
     color_mask = class_palette[mask_vis.squeeze()]
 
-    # --- Визуализация ---
+    #     Визуализация 
     fig, axs = plt.subplots(1, 2, figsize=(12, 6))
     axs[0].imshow(image)
     axs[0].set_title('Image')
@@ -217,7 +212,6 @@ def merge_folders(src_root, dst_folder):
                 for file_name in os.listdir(city_path):
                     src_file = os.path.join(city_path, file_name)
                     dst_file = os.path.join(dst_folder, file_name)
-                    # Если имена файлов могут совпадать, можно добавить префикс или суффикс
                     if os.path.exists(dst_file):
                         base, ext = os.path.splitext(file_name)
                         dst_file = os.path.join(dst_folder, f"{split}_{city}_{base}{ext}")
@@ -225,5 +219,60 @@ def merge_folders(src_root, dst_folder):
 
 
 
+# вывод результатов
+def load_and_display_metrics_with_highlight(filename='results.csv'):
+    """
+    Загружает таблицу метрик из CSV и выводит её с выделением максимального avg_iou.
 
+    Args:
+        filename (str): путь к CSV-файлу с метриками (по умолчанию 'results.csv')
+
+    Returns:
+        pd.DataFrame или None: загруженный DataFrame, либо None если файл не найден
+    """
+    if os.path.exists(filename):
+        df = pd.read_csv(filename, encoding='utf-8')
+        # Выделяем максимальное значение в столбце 'avg_iou'
+        styled_df = df.style.highlight_max(subset=['avg_iou'], color='green')
+        display(styled_df)
+        return df
+    else:
+        print(f"Файл '{filename}' не найден.")
+        return None
+
+
+# Заполнение таблицы результатами 
+def save_metrics_to_csv(comment, model_name, avg_loss, avg_acc, avg_iou, filename='results.csv'):
+    """
+    Загружает существующий CSV (если есть), добавляет новую строку с метриками и сохраняет обратно.
+
+    Args:
+        comment (str): комментарий к эксперименту
+        model_name (str): название модели
+        avg_loss (float): среднее значение loss
+        avg_acc (float): средняя точность (accuracy)
+        avg_iou (float): среднее значение IoU
+        filename (str): имя файла для сохранения (по умолчанию 'results.csv')
+    """
+    # Создаем новую запись в виде DataFrame
+    new_row = pd.DataFrame([{
+        'Комментарий': comment,
+        'Модель': model_name,
+        'avg_loss': avg_loss,
+        'avg_acc': avg_acc,
+        'avg_iou': avg_iou
+    }])
+
+    # Проверяем, существует ли файл
+    if os.path.exists(filename):
+        # Загружаем существующий файл
+        df = pd.read_csv(filename, encoding='utf-8')
+        # Добавляем новую строку
+        df = pd.concat([df, new_row], ignore_index=True)
+    else:
+        # Если файла нет, создаём новый DataFrame
+        df = new_row
+
+    # Сохраняем DataFrame обратно в CSV
+    df.to_csv(filename, index=False, encoding='utf-8')
 
