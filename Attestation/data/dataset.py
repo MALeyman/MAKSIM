@@ -137,11 +137,10 @@ class CityscapesFlatDataset2(Dataset):
 class CityscapesFlatDataset3(Dataset):
     """Датасет для новых изображений и масок с одинаковыми именами файлов."""
 
-    def __init__(self, root_dir, transform=None, val_transform=None, img_size=(512, 256)):
+    def __init__(self, root_dir, transform=None, img_size=(512, 256)):
         self.images_dir = os.path.join(root_dir, 'images')
         self.targets_dir = os.path.join(root_dir, 'targets')
         self.transform = transform
-        self.val_transform = val_transform
         self.img_size = img_size
 
         # Список файлов изображений
@@ -313,7 +312,6 @@ class CustomAugmentationsNumPy:
 def prepare_cityscapes_loaders(dataset_class, root_dir,
                                size,
                                batch_size,
-                               val_ratio=0.1,
                                num_workers=0,
                                 p_hflip=0.2,
                                 p_brightness=0.2,
@@ -338,7 +336,7 @@ def prepare_cityscapes_loaders(dataset_class, root_dir,
     )
 
     # Трансформации для val (без аугментаций, только resize)
-    val_transform_img =  CustomAugmentationsNumPy(
+    val_transform =  CustomAugmentationsNumPy(
         img_size=(256, 512),
         p_flip=0.0,
         p_hflip=0.0,
@@ -349,28 +347,11 @@ def prepare_cityscapes_loaders(dataset_class, root_dir,
         p_saturation=0.0
     )
 
+    train_dir = os.path.join(root_dir, 'train')
+    val_dir = os.path.join(root_dir, 'val')
 
-    # Создаём полный датасет без трансформаций
-    full_dataset = dataset_class(root_dir=root_dir, transform=None, val_transform=None)
-
-    # Разбиваем индексы
-    total_size = len(full_dataset)
-    indices = list(range(total_size))
-    split = int(val_ratio * total_size)
-
-    train_indices = indices[split:]
-    val_indices = indices[:split]
-
-    # Создаём train и val датасеты с разными трансформациями
-    train_dataset = Subset(full_dataset, train_indices)
-    val_dataset = Subset(full_dataset, val_indices)
-
- 
-    train_full = dataset_class(root_dir=root_dir, transform=train_transforms, val_transform=None)
-    val_full = dataset_class(root_dir=root_dir, transform=val_transform_img, val_transform=None)
-
-    train_dataset = Subset(train_full, train_indices)
-    val_dataset = Subset(val_full, val_indices)
+    train_dataset = dataset_class(root_dir=train_dir, transform=train_transforms)
+    val_dataset = dataset_class(root_dir=val_dir, transform=val_transform)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
@@ -378,3 +359,65 @@ def prepare_cityscapes_loaders(dataset_class, root_dir,
     print(f'Train size: {len(train_dataset)}, Validation size: {len(val_dataset)}')
     return train_loader, val_loader, train_dataset, val_dataset
 
+
+
+
+
+# Разделение датасета
+def split_dataset(dataset_dir):
+    """ 
+    Разделение датасета
+    """
+
+    images_dir = os.path.join(dataset_dir, 'images')
+    masks_dir = os.path.join(dataset_dir, 'targets')
+    # Пути к новым папкам для train и val
+    output_dir = 'dataset_split'
+    train_images_dir = os.path.join(output_dir, 'train', 'images')
+    train_masks_dir = os.path.join(output_dir, 'train', 'targets')
+    val_images_dir = os.path.join(output_dir, 'val', 'images')
+    val_masks_dir = os.path.join(output_dir, 'val', 'targets')
+
+    # Создаем папки, если не существуют
+    for folder in [train_images_dir, train_masks_dir, val_images_dir, val_masks_dir]:
+        os.makedirs(folder, exist_ok=True)
+
+    # Получаем список всех файлов изображений
+    all_images = sorted(os.listdir(images_dir))
+
+    # Фиксируем seed для воспроизводимости
+    np.random.seed(42)
+    shuffled_indices = np.random.permutation(len(all_images))
+
+    # Задаем долю для обучения
+    train_ratio = 0.85
+    train_size = int(len(all_images) * train_ratio)
+
+    train_indices = shuffled_indices[:train_size]
+    val_indices = shuffled_indices[train_size:]
+
+    # Функция копирования пары (изображение + маска)
+    def copy_pair(idx, src_img_list):
+        img_name = src_img_list[idx]
+        mask_name = img_name  # имена масок совпадают с именами изображений
+
+        # Полные пути к исходным файлам
+        src_img_path = os.path.join(images_dir, img_name)
+        src_mask_path = os.path.join(masks_dir, mask_name)
+
+        # Копируем в train или val в зависимости от индекса
+        if idx in train_indices:
+            dst_img_path = os.path.join(train_images_dir, img_name)
+            dst_mask_path = os.path.join(train_masks_dir, mask_name)
+        else:
+            dst_img_path = os.path.join(val_images_dir, img_name)
+            dst_mask_path = os.path.join(val_masks_dir, mask_name)
+
+        shutil.copy2(src_img_path, dst_img_path)
+        shutil.copy2(src_mask_path, dst_mask_path)
+
+    # Копируем все пары
+    for i in range(len(all_images)):
+        copy_pair(i, all_images)
+
+    print(f"Данные успешно разделены: {train_size} файлов в train, {len(all_images) - train_size} в val.")
