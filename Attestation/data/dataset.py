@@ -214,7 +214,10 @@ class CustomAugmentationsNumPy:
         p_noise=0.0,
         p_swap_channels=0.0,  
         p_contrast=0.0,
-        p_saturation=0.0
+        p_saturation=0.0,
+        p_random_crop=0.0,    # вероятность применения random crop
+        crop_scale=(0.6, 0.9), # масштаб вырезаемой области относительно исходного размера
+        crop_ratio=(1.0, 2.0) # соотношение сторон вырезаемой области (h/w)
 
     ):
         """ 
@@ -228,6 +231,58 @@ class CustomAugmentationsNumPy:
         self.p_contrast = p_contrast
         self.p_saturation = p_saturation
         self.p_hflip = p_hflip
+        self.p_random_crop = p_random_crop
+        self.crop_scale = crop_scale
+        self.crop_ratio = crop_ratio
+
+
+    def _random_resized_crop(self, img_np, mask_np):
+        h, w = img_np.shape[1:]  # CHW -> (H, W)
+
+        for attempt in range(10):
+            target_area = random.uniform(*self.crop_scale) * h * w
+            aspect_ratio = random.uniform(*self.crop_ratio)
+
+            new_w = int(round(np.sqrt(target_area * aspect_ratio)))
+            new_h = int(round(np.sqrt(target_area / aspect_ratio)))
+
+            if new_w <= w and new_h <= h:
+                x1 = random.randint(0, w - new_w)
+                y1 = random.randint(0, h - new_h)
+
+                # Вырезаем область
+                img_crop = img_np[:, y1:y1+new_h, x1:x1+new_w]
+                mask_crop = mask_np[y1:y1+new_h, x1:x1+new_w]
+
+                # Масштабируем до нужного размера
+                img_resized = cv2.resize(
+                    img_crop.transpose(1, 2, 0), 
+                    (self.img_size[1], self.img_size[0]), 
+                    interpolation=cv2.INTER_LINEAR
+                ).transpose(2, 0, 1)
+
+                mask_resized = cv2.resize(
+                    mask_crop,
+                    (self.img_size[1], self.img_size[0]),
+                    interpolation=cv2.INTER_NEAREST
+                )
+
+                return img_resized, mask_resized
+
+        # Если не удалось подобрать crop, возвращаем исходные с ресайзом
+        img_resized = cv2.resize(
+            img_np.transpose(1, 2, 0), 
+            (self.img_size[1], self.img_size[0]), 
+            interpolation=cv2.INTER_LINEAR
+        ).transpose(2, 0, 1)
+
+        mask_resized = cv2.resize(
+            mask_np,
+            (self.img_size[1], self.img_size[0]),
+            interpolation=cv2.INTER_NEAREST
+        )
+        return img_resized, mask_resized
+
 
 
     def _add_noise(self, img_np, std=0.01):
@@ -282,6 +337,9 @@ class CustomAugmentationsNumPy:
         if random.random() < self.p_swap_channels:   # Смена каналов RGB <-> BGR 
             # Для формата CHW (каналы, высота, ширина)
             img_np = img_np[::-1, :, :].copy()  # Инвертирование порядка каналов
+ 
+        if random.random() < self.p_random_crop:    # Применяем random crop
+            img_np, mask_np = self._random_resized_crop(img_np, mask_np)
 
 
         # Ресайз
@@ -308,17 +366,23 @@ class CustomAugmentationsNumPy:
 
 
 
+
+
+
+
+
 # #########################  Создание даталоадеров
 def prepare_cityscapes_loaders(dataset_class, root_dir,
                                size,
                                batch_size,
                                num_workers=0,
                                 p_hflip=0.2,
-                                p_brightness=0.2,
-                                p_noise=0.2,
-                                p_swap_channels=0.01, 
+                                p_brightness=0.1,
+                                p_noise=0.1,
+                                p_swap_channels=0.005, 
                                 p_contrast=0.1,
-                                p_saturation=0.1):
+                                p_saturation=0.1,
+                                p_random_crop=0.2):
     """ 
     Содание даталоадеров 
     """
@@ -332,7 +396,8 @@ def prepare_cityscapes_loaders(dataset_class, root_dir,
         p_noise=p_noise,
         p_swap_channels=p_swap_channels, 
         p_contrast=p_contrast,
-        p_saturation=p_saturation
+        p_saturation=p_saturation,
+        p_random_crop=p_random_crop
     )
 
     # Трансформации для val (без аугментаций, только resize)
