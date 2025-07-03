@@ -135,7 +135,9 @@ class CityscapesFlatDataset2(Dataset):
 
 
 class CityscapesFlatDataset3(Dataset):
-    """Датасет для новых изображений и масок с одинаковыми именами файлов."""
+    """
+    Датасет для изображений и масок с одинаковыми именами файлов.
+    """
 
     def __init__(self, root_dir, transform=None, img_size=(512, 256)):
         self.images_dir = os.path.join(root_dir, 'images')
@@ -208,16 +210,16 @@ class CustomAugmentationsNumPy:
     def __init__(
         self,
         img_size=(256, 512),
-        p_flip=0.0,
-        p_hflip=0.0,
-        p_brightness=0.0,
-        p_noise=0.0,
-        p_swap_channels=0.0,  
-        p_contrast=0.0,
-        p_saturation=0.0,
-        p_random_crop=0.0,    # вероятность применения random crop
-        crop_scale=(0.6, 0.9), # масштаб вырезаемой области относительно исходного размера
-        crop_ratio=(1.0, 2.0) # соотношение сторон вырезаемой области (h/w)
+        p_flip=0.0,            # Вертикальный флип (не используется)
+        p_hflip=0.0,           # Горизонтальный флип
+        p_brightness=0.0,      # Изменение яркости
+        p_noise=0.0,           # Шум
+        p_swap_channels=0.0,   # Смена каналов
+        p_contrast=0.0,        # Изменение контраста
+        p_saturation=0.0,      # Изменение насыщенности
+        p_random_crop=0.0,     # вероятность применения random crop
+        crop_scale=(0.6, 0.8), # масштаб вырезаемой области относительно исходного размера
+        crop_ratio=(0.4, 0.6)  # соотношение сторон вырезаемой области (h/w)
 
     ):
         """ 
@@ -225,7 +227,7 @@ class CustomAugmentationsNumPy:
         """
         self.img_size = img_size
         self.p_flip = p_flip
-        self.p_brightness = p_brightness
+        self.p_brightness = p_brightness 
         self.p_noise = p_noise
         self.p_swap_channels = p_swap_channels  
         self.p_contrast = p_contrast
@@ -314,7 +316,7 @@ class CustomAugmentationsNumPy:
         assert isinstance(mask_np, np.ndarray), f"Mask must be numpy array, got {type(mask_np)}"
         
 
-        if random.random() < self.p_hflip:  # p_hflip — вероятность горизонтального флипа
+        if random.random() < self.p_hflip:  # вероятность горизонтального флипа
             img_np = img_np[:, :, ::-1]
             mask_np = mask_np[:, ::-1]
 
@@ -366,11 +368,6 @@ class CustomAugmentationsNumPy:
 
 
 
-
-
-
-
-
 # #########################  Создание даталоадеров
 def prepare_cityscapes_loaders(dataset_class, root_dir,
                                size,
@@ -409,9 +406,11 @@ def prepare_cityscapes_loaders(dataset_class, root_dir,
         p_noise=0.0,
         p_swap_channels=0.0, 
         p_contrast=0.0,
-        p_saturation=0.0
+        p_saturation=0.0,
+        p_random_crop=0.0
     )
 
+    # Датасет разделённый на train и Val
     train_dir = os.path.join(root_dir, 'train')
     val_dir = os.path.join(root_dir, 'val')
 
@@ -427,11 +426,10 @@ def prepare_cityscapes_loaders(dataset_class, root_dir,
 
 
 
-
 # Разделение датасета
 def split_dataset(dataset_dir):
     """ 
-    Разделение датасета
+    Разделение датасета и сохранение
     """
 
     images_dir = os.path.join(dataset_dir, 'images')
