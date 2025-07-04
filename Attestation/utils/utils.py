@@ -149,13 +149,17 @@ def decode_segmap(mask, colormap):
 
 
 # Функция визуализации
-def visualize_segmentation(image_pil, pred_mask, colormap, alpha=0.5):
+def visualize_segmentation(image_pil, pred_mask, colormap, alpha=0.5, title=None):
     """
     image_pil: PIL.Image — исходное изображение
     pred_mask: torch.Tensor или numpy.ndarray (H, W) с классами
     colormap: dict с цветами классов
     alpha: прозрачность наложения маски
+    title: str — общий заголовок для всей фигуры
     """
+    import numpy as np
+    import matplotlib.pyplot as plt
+
     # Преобразуем PIL Image в numpy (H, W, 3)
     image_np = np.array(image_pil.convert("RGB"))
 
@@ -177,7 +181,9 @@ def visualize_segmentation(image_pil, pred_mask, colormap, alpha=0.5):
     overlay = (image_np * (1 - alpha) + color_mask * alpha).astype(np.uint8)
 
     # Визуализация
-    plt.figure(figsize=(20, 20))
+    plt.figure(figsize=(20, 4))
+    if title is not None:
+        plt.suptitle(title, fontsize=16)  # Добавляем общий заголовок
 
     plt.subplot(1, 3, 1)
     plt.title("Исходное изображение")
@@ -195,6 +201,7 @@ def visualize_segmentation(image_pil, pred_mask, colormap, alpha=0.5):
     plt.axis('off')
 
     plt.show()
+
 
 
 # Объединение датасета
