@@ -1,6 +1,7 @@
-onnxruntime
 numpy
 pillow
 gradio
 opencv-python
-
+torchvision
+albumentations
+onnxruntime-gpu
