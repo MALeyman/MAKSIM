@@ -3,32 +3,69 @@
 """
 
 from torchvision.ops import nms
-
-from retinaface.box_utils import decode, decode_landm
 from typing import Union, Optional, Any, Dict, List, Tuple
 import albumentations as A
 from itertools import product
 from math import ceil
-from pathlib import Path
-
-import pandas as pd
 import numpy as np
-
-from PIL import Image
 import os
-from skimage import io
 import torch
-from torch.utils.data import Dataset, DataLoader
-from IPython.display import clear_output
 from torch.nn import functional as F
 import cv2
-from matplotlib import pyplot as plt
-import onnxruntime
-
 from projects.common.session import ort_session
-
 import subprocess
+import tempfile
 
+
+def decode_landm(
+    pre: torch.Tensor, priors: torch.Tensor, variances: Union[List[float], Tuple[float, float]]
+) -> torch.Tensor:
+    """Decode landmarks from predictions using priors to undo the encoding we did for offset regression at train time.
+    Args:
+        pre: landmark predictions for loc layers,
+            Shape: [num_priors, 10]
+        priors: Prior boxes in center-offset form.
+            Shape: [num_priors, 4].
+        variances: Variances of priorboxes
+    Return:
+        decoded landmark predictions
+    """
+    return torch.cat(
+        (
+            priors[:, :2] + pre[:, :2] * variances[0] * priors[:, 2:],
+            priors[:, :2] + pre[:, 2:4] * variances[0] * priors[:, 2:],
+            priors[:, :2] + pre[:, 4:6] * variances[0] * priors[:, 2:],
+            priors[:, :2] + pre[:, 6:8] * variances[0] * priors[:, 2:],
+            priors[:, :2] + pre[:, 8:10] * variances[0] * priors[:, 2:],
+        ),
+        dim=1,
+    )
+
+
+def decode(
+    loc: torch.Tensor, priors: torch.Tensor, variances: Union[List[float], Tuple[float, float]]
+) -> torch.Tensor:
+    """Decode locations from predictions using priors to undo the encoding we did for offset regression at train time.
+    Args:
+        loc: location predictions for loc layers,
+            Shape: [num_priors, 4]
+        priors: Prior boxes in center-offset form.
+            Shape: [num_priors, 4].
+        variances: Variances of priorboxes
+    Return:
+        decoded bounding box predictions
+    """
+
+    boxes = torch.cat(
+        (
+            priors[:, :2] + loc[:, :2] * variances[0] * priors[:, 2:],
+            priors[:, 2:] * torch.exp(loc[:, 2:] * variances[1]),
+        ),
+        1,
+    )
+    boxes[:, :2] -= boxes[:, 2:] / 2
+    boxes[:, 2:] += boxes[:, :2]
+    return boxes
 
 
 def convert_to_h264(input_path, output_path):
@@ -42,9 +79,6 @@ def convert_to_h264(input_path, output_path):
     ]
     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
-
-
-plt.rcParams["figure.figsize"] = (10, 10)
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -190,13 +224,6 @@ def vis_annotations(image: np.ndarray, annotations: List[Dict[str, Any]]) -> np.
 
 
 
-
-
-
-
-
-
-
 def prior_box1(min_sizes, steps, clip, image_size):
     feature_maps = [[ceil(image_size[0] / step), ceil(image_size[1] / step)] for step in steps]
 
@@ -217,10 +244,6 @@ def prior_box1(min_sizes, steps, clip, image_size):
     if clip:
         output.clamp_(max=1, min=0)
     return output
-
-
-
-
 
 
 def pad_to_size(
@@ -343,190 +366,6 @@ def unpad_from_size(
 
 
 
-
-import tempfile
-import cv2
-import torch
-import onnxruntime
-from IPython.display import clear_output  
-
-# def gradio_video_processing(
-#     video_file,
-#     confidence_threshold=0.7,
-#     nms_threshold=0.4,
-#     max_size=1200,
-#     frame_skip=1,
-# ):
-#     # Инициализация устройства
-#     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-#     print("Используем  устройство:", device)
-#     global ort_session 
-#     # Открываем видео
-#     cap = cv2.VideoCapture(video_file)
-#     if not cap.isOpened():
-#         raise RuntimeError(f"Cannot open video file {video_file}")
-
-#     fps = cap.get(cv2.CAP_PROP_FPS)
-#     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-#     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-#     print("Размеры", width, height)
-#     if width == 0 or height == 0:
-#         raise RuntimeError(f"Invalid video dimensions: width={width}, height={height}")
-
-
-
-#     # Создаем временный файл для записи результата
-#     temp_file = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
-#     output_path = temp_file.name
-#     temp_file.close()
-
-#     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-#     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-
-#     frame_idx = 0
-#     last_annotation = None
-
-#     while True:
-#         ret, frame = cap.read()
-#         if not ret:
-#             break
-
-#         clear_output(wait=True)  
-
-#         if frame_idx % frame_skip == 0:
-#             img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        
-#             annotation = predict_jsons1(
-#                 ort_session,
-#                 img_rgb,
-#                 confidence_threshold=confidence_threshold,
-#                 nms_threshold=nms_threshold,
-#                 max_size=max_size,
-#             )
-#             last_annotation = annotation
-
-#             img_vis = vis_annotations(img_rgb, annotation)
-#             img_bgr = cv2.cvtColor(img_vis, cv2.COLOR_RGB2BGR)
-#         else:
-#             if last_annotation is not None:
-#                 img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-#                 img_vis = vis_annotations(img_rgb, last_annotation)
-#                 img_bgr = cv2.cvtColor(img_vis, cv2.COLOR_RGB2BGR)
-#             else:
-#                 img_bgr = frame
-
-#         out.write(img_bgr)
-#         frame_idx += 1
-
-#     cap.release()
-#     out.release()
-    
-#     return output_path
-
-
-
-
-
-
-import cv2
-import tempfile
-import subprocess
-
-# def convert_to_h264(input_path, output_path):
-#     command = [
-#         'ffmpeg',
-#         '-y',  # перезаписать если файл существует
-#         '-i', input_path,
-#         '-c:v', 'libx264',
-#         '-pix_fmt', 'yuv420p',
-#         output_path
-#     ]
-#     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-
-# def gradio_video_processing(video_file, confidence_threshold=0.7, nms_threshold=0.4, max_size=1200, frame_skip=1):
-#     cap = cv2.VideoCapture(video_file)
-#     if not cap.isOpened():
-#         raise RuntimeError(f"Cannot open video file {video_file}")
-
-#     fps = cap.get(cv2.CAP_PROP_FPS)
-#     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-#     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-#     print("Размеры", width, height)
-#     if width == 0 or height == 0:
-#         raise RuntimeError(f"Invalid video dimensions: width={width}, height={height}")
-
-#     # Округляем размеры до чётных для кодека H264
-#     width = (width // 2) * 2
-#     height = (height // 2) * 2
-
-#     # Создаем временный файл для записи видео OpenCV
-#     temp_file = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
-#     temp_path = temp_file.name
-#     temp_file.close()
-
-#     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-#     out = cv2.VideoWriter(temp_path, fourcc, fps, (width, height))
-
-#     frame_idx = 0
-#     last_annotation = None
-
-#     while True:
-#         ret, frame = cap.read()
-#         if not ret:
-#             break
-
-#         if frame_idx % frame_skip == 0:
-#             img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-#             annotation = predict_jsons1(
-#                 ort_session,
-#                 img_rgb,
-#                 confidence_threshold=confidence_threshold,
-#                 nms_threshold=nms_threshold,
-#                 max_size=max_size,
-#             )
-#             last_annotation = annotation
-#             img_vis = vis_annotations(img_rgb, annotation)
-#             img_bgr = cv2.cvtColor(img_vis, cv2.COLOR_RGB2BGR)
-#         else:
-#             if last_annotation is not None:
-#                 img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-#                 img_vis = vis_annotations(img_rgb, last_annotation)
-#                 img_bgr = cv2.cvtColor(img_vis, cv2.COLOR_RGB2BGR)
-#             else:
-#                 img_bgr = frame
-
-#         out.write(img_bgr)
-#         frame_idx += 1
-
-#     cap.release()
-#     out.release()
-
-#     # Создаем второй временный файл для перекодированного видео
-#     final_file = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
-#     final_path = final_file.name
-#     final_file.close()
-
-#     # Перекодируем видео в H264 для совместимости с браузерами
-#     convert_to_h264(temp_path, final_path)
-
-#     return final_path
-
-
-
-
-
-import tempfile
-import os
-import cv2
-import torch
-
-import tempfile
-import os
-import cv2
-import torch
-import subprocess
-
 def convert_to_h264(input_path, output_path):
     command = [
         'ffmpeg',
@@ -540,14 +379,6 @@ def convert_to_h264(input_path, output_path):
 
 
 
-
-
-
-
-import os
-import cv2
-import torch
-import subprocess
 
 def convert_to_h264(input_path, output_path):
     command = [

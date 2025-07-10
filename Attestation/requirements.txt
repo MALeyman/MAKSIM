@@ -4,10 +4,7 @@ matplotlib
 seaborn
 plotly
 requests
-scikit-learn
 tqdm
-scikit-image
-onnxruntime
 pillow
 gradio
 opencv-python
