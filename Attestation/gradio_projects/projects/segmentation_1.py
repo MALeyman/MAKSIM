@@ -4,8 +4,20 @@ import numpy as np
 from PIL import Image
 import os
 import gradio as gr
+import sys
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# print("ПУТЬ:  ", BASE_DIR)
+
+ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, '..'))
+# Добавляем корень проекта в sys.path, если его там нет
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+
+from projects.common.session import ort_session, get_device
+
+
 
 image_path = os.path.join(BASE_DIR, "files/999.png")
 model_path = os.path.join(BASE_DIR, "files/unetpp_model.onnx")
@@ -114,12 +126,16 @@ class_names = [
 
 def get_segmentation_tab():
     with gr.Blocks() as tab:
+        gr.Markdown("## Сегментация изображений (Итоговая аттестация)")
+        gr.Markdown("---")
         with gr.Row():
             with gr.Column(scale=1):
+                # Добавляем метку устройства
+                device_label = gr.Label(value=get_device(), label="Работаем на устройстве")
                 selected = gr.CheckboxGroup(label="Выберите классы для отображения", choices=class_names, value=class_names[:3])
                 btn = gr.Button("Сегментировать")
             with gr.Column(scale=3):
-                input_image = gr.Image(type="pil", value=image_path, label="Исходное изображение")
+                input_image = gr.Image(type="pil", value=image_path, label="Исходное изображение", height=320)
                 output_image = gr.Image(label="Результат сегментации")
         btn.click(fn=segment_and_overlay, inputs=[input_image, selected], outputs=output_image)
     return tab
