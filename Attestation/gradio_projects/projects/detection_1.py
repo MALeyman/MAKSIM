@@ -5,13 +5,12 @@ from PIL import Image
 import os
 import gradio as gr
 import sys
-
+import cv2
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # print("ПУТЬ:  ", BASE_DIR)
 
-# Корень проекта — на два уровня выше, т.к. __file__ в gradio_projects/projects
 # ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, '..', '..'))
 ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, '..'))
 # Добавляем корень проекта в sys.path, если его там нет
@@ -19,7 +18,7 @@ if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 # print("ПУТЬ:  ", ROOT_DIR)
-# Теперь импортируем модуль как абсолютный из корня проекта
+# импортируем модуль как абсолютный из корня проекта
 from projects.files.utils import predict_jsons1, vis_annotations, gradio_video_processing, onnx_inference
 from projects.common.session import ort_session, get_device
 
@@ -29,21 +28,6 @@ video_path = os.path.join(BASE_DIR, "files/1.mp4")
 model_path = os.path.join(BASE_DIR, "files/retinaface_resnet50.onnx")
 
 
-
-
-
-# session = ort.InferenceSession(model_path)
-import gradio as gr
-import cv2
-import numpy as np
-import onnxruntime
-import torch
-
-
-
-# Загрузка ONNX Runtime с CUDA
-# providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
-# ort_session = onnxruntime.InferenceSession(model_path, providers=providers)
 
 def onnx_inference(image: np.ndarray, confidence_threshold=0.7, nms_threshold=0.4, max_size=1200):
     """
@@ -57,7 +41,7 @@ def onnx_inference(image: np.ndarray, confidence_threshold=0.7, nms_threshold=0.
     else:
         img_rgb = image
 
-    # Запуск предсказания (здесь вызывается ваша функция predict_jsons1)
+    # Запуск предсказания
     annotation = predict_jsons1(
         ort_session,
         img_rgb,
@@ -74,17 +58,10 @@ def onnx_inference(image: np.ndarray, confidence_threshold=0.7, nms_threshold=0.
 
     return img_bgr
 
-# def get_device():
-#     providers = ort.get_available_providers()
-#     if 'CUDAExecutionProvider' in providers:
-#         return "Устройство: GPU (CUDA)"
-#     else:
-#         return "Устройство: CPU"
-
 
 def get_detection_tab_1():
 
-        gr.Markdown("## Детекция лиц с помощью ONNX (Промежуточная аттестация 4)")
+        gr.Markdown("## Детекция лиц с помощью ONNX (Промежуточная аттестация)")
         gr.Markdown("---")
         with gr.Row():
             # Левая колонка со слайдерами (общие для обеих вкладок)

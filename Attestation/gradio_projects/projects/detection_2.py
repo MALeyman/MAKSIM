@@ -11,15 +11,13 @@ import sys
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # print("ПУТЬ:  ", BASE_DIR)
 
-# Корень проекта — на два уровня выше, т.к. __file__ в gradio_projects/projects
-# ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, '..', '..'))
 ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, '..'))
 # Добавляем корень проекта в sys.path, если его там нет
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 # print("ПУТЬ:  ", ROOT_DIR)
-# Теперь импортируем модуль как абсолютный из корня проекта
+# импортируем модуль как абсолютный из корня проекта
 from projects.files.utils import  gradio_video_processing2, onnx_inference2
 from projects.common.session import ort_session, ort_session_2, get_device
 
@@ -27,15 +25,6 @@ from projects.common.session import ort_session, ort_session_2, get_device
 image_path = os.path.join(BASE_DIR, "files/4.jpg")
 video_path = os.path.join(BASE_DIR, "files/2.mp4")
 model_path = os.path.join(BASE_DIR, "files/yolo.onnx")
-
-# session = ort.InferenceSession(model_path)
-import gradio as gr
-import cv2
-import numpy as np
-import onnxruntime
-import torch
-
-
 
 
 def get_detection_tab_2():

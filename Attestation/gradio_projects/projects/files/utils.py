@@ -14,7 +14,6 @@ import torch
 from torch.nn import functional as F
 import cv2
 import onnxruntime
-
 from projects.common.session import ort_session, ort_session_2
 import subprocess
 import tempfile
@@ -110,7 +109,6 @@ def prior_box1(min_sizes, steps, clip, image_size):
                 for cy, cx in product(dense_cy, dense_cx):
                     anchors += [cx, cy, s_kx, s_ky]
 
-    # back to torch land
     output = torch.Tensor(anchors).view(-1, 4)
     if clip:
         output.clamp_(max=1, min=0)
@@ -500,7 +498,7 @@ def onnx_inference(image: np.ndarray, confidence_threshold=0.7, nms_threshold=0.
     else:
         img_rgb = image
 
-    # Запуск предсказания (здесь вызывается ваша функция predict_jsons1)
+    # Запуск предсказания 
     annotation = predict_jsons1(
         ort_session,
         img_rgb,
@@ -625,7 +623,7 @@ def gradio_video_processing2(
     imgsz=736,
     frame_skip=1,
 ):
-    global ort_session_2  # ort_session инициализирован глобально
+    global ort_session_2  # инициализирован глобально
 
 
     cap = cv2.VideoCapture(video_file)
@@ -684,6 +682,8 @@ def gradio_video_processing2(
         #         img_bgr = frame
 
         # img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+
         # annotation, h0, w0, imgsz = predict_jsons2(
         #     ort_session_2,
         #     img_rgb,
