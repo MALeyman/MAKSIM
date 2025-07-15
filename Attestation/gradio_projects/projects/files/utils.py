@@ -530,7 +530,7 @@ def onnx_inference2(image: np.ndarray, confidence_threshold=0.7, nms_threshold=0
     else:
         img_rgb = image
 
-    # Запуск предсказания (здесь вызывается ваша функция predict_jsons1)
+    # Запуск предсказания
     output, h0, w0, imgsz = predict_jsons2(
         ort_session_2,
         img_rgb,

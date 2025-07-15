@@ -19,7 +19,7 @@ if ROOT_DIR not in sys.path:
 
 # print("ПУТЬ:  ", ROOT_DIR)
 # импортируем модуль как абсолютный из корня проекта
-from projects.files.utils import predict_jsons1, vis_annotations, gradio_video_processing, onnx_inference
+from projects.files.utils import gradio_video_processing, onnx_inference
 from projects.common.session import ort_session, get_device
 
 
@@ -27,36 +27,6 @@ image_path = os.path.join(BASE_DIR, "files/3.jpg")
 video_path = os.path.join(BASE_DIR, "files/1.mp4")
 model_path = os.path.join(BASE_DIR, "files/retinaface_resnet50.onnx")
 
-
-
-def onnx_inference(image: np.ndarray, confidence_threshold=0.7, nms_threshold=0.4, max_size=1200):
-    """
-    Функция для инференса ONNX модели на входном изображении.
-    image: RGB numpy array
-    Возвращает изображение с аннотациями (BGR numpy array)
-    """
-    # Конвертируем BGR (OpenCV) в RGB, если нужно
-    if image.shape[2] == 3:
-        img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    else:
-        img_rgb = image
-
-    # Запуск предсказания
-    annotation = predict_jsons1(
-        ort_session,
-        img_rgb,
-        confidence_threshold=confidence_threshold,
-        nms_threshold=nms_threshold,
-        max_size=max_size,
-    )
-
-    # Визуализация аннотаций
-    img_vis = vis_annotations(img_rgb, annotation)
-
-    # Конвертируем обратно в BGR для отображения в OpenCV/Gradio
-    img_bgr = cv2.cvtColor(img_vis, cv2.COLOR_RGB2BGR)
-
-    return img_bgr
 
 
 def get_detection_tab_1():
