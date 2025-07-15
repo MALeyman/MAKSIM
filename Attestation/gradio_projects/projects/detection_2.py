@@ -20,17 +20,13 @@ if ROOT_DIR not in sys.path:
 
 # print("ПУТЬ:  ", ROOT_DIR)
 # Теперь импортируем модуль как абсолютный из корня проекта
-from projects.files.utils import predict_jsons1, vis_annotations, gradio_video_processing, onnx_inference
-from projects.common.session import ort_session, get_device
+from projects.files.utils import  gradio_video_processing2, onnx_inference2
+from projects.common.session import ort_session, ort_session_2, get_device
 
 
-image_path = os.path.join(BASE_DIR, "files/3.jpg")
-video_path = os.path.join(BASE_DIR, "files/1.mp4")
-model_path = os.path.join(BASE_DIR, "files/retinaface_resnet50.onnx")
-
-
-
-
+image_path = os.path.join(BASE_DIR, "files/4.jpg")
+video_path = os.path.join(BASE_DIR, "files/2.mp4")
+model_path = os.path.join(BASE_DIR, "files/yolo.onnx")
 
 # session = ort.InferenceSession(model_path)
 import gradio as gr
@@ -41,59 +37,19 @@ import torch
 
 
 
-# Загрузка ONNX Runtime с CUDA
-# providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
-# ort_session = onnxruntime.InferenceSession(model_path, providers=providers)
 
-def onnx_inference(image: np.ndarray, confidence_threshold=0.7, nms_threshold=0.4, max_size=1200):
-    """
-    Функция для инференса ONNX модели на входном изображении.
-    image: RGB numpy array
-    Возвращает изображение с аннотациями (BGR numpy array)
-    """
-    # Конвертируем BGR (OpenCV) в RGB, если нужно
-    if image.shape[2] == 3:
-        img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    else:
-        img_rgb = image
+def get_detection_tab_2():
 
-    # Запуск предсказания (здесь вызывается ваша функция predict_jsons1)
-    annotation = predict_jsons1(
-        ort_session,
-        img_rgb,
-        confidence_threshold=confidence_threshold,
-        nms_threshold=nms_threshold,
-        max_size=max_size,
-    )
-
-    # Визуализация аннотаций
-    img_vis = vis_annotations(img_rgb, annotation)
-
-    # Конвертируем обратно в BGR для отображения в OpenCV/Gradio
-    img_bgr = cv2.cvtColor(img_vis, cv2.COLOR_RGB2BGR)
-
-    return img_bgr
-
-# def get_device():
-#     providers = ort.get_available_providers()
-#     if 'CUDAExecutionProvider' in providers:
-#         return "Устройство: GPU (CUDA)"
-#     else:
-#         return "Устройство: CPU"
-
-
-def get_detection_tab_1():
-
-        gr.Markdown("## Детекция лиц с помощью ONNX (Промежуточная аттестация 4)")
+        gr.Markdown("## Детекция с БПЛА (Задание ZALA)")
         gr.Markdown("---")
         with gr.Row():
             # Левая колонка со слайдерами (общие для обеих вкладок)
             with gr.Column(scale=1):
                 # Добавляем метку устройства
                 device_label = gr.Label(value=get_device(), label="Работаем на устройстве")
-                confidence_slider = gr.Slider(0, 1, value=0.7, label="Порог уверенности")
-                nms_slider = gr.Slider(0, 1, value=0.4, label="Порог NMS")
-                max_size_slider = gr.Slider(256, 2048, value=1200, step=64, label="Максимальный размер изображения")
+                confidence_slider = gr.Slider(0, 1, value=0.5, label="Порог уверенности")
+                nms_slider = gr.Slider(0, 1, value=0.6, label="Порог NMS")
+                max_size_slider = gr.Slider(736, 736, value=736, step=0, label="Максимальный размер изображения")
 
 
             # Правая колонка с вкладками для изображения и видео
@@ -105,8 +61,8 @@ def get_detection_tab_1():
                         btn_img = gr.Button("Запустить детекцию")
 
                         btn_img.click(
-                            onnx_inference,
-                            inputs=[input_image, confidence_slider, nms_slider, max_size_slider],
+                            onnx_inference2,
+                            inputs=[input_image, confidence_slider, nms_slider],
                             outputs=output_image,
                         )
 
@@ -115,13 +71,13 @@ def get_detection_tab_1():
                             label="Загрузите видео",
                             sources=["upload", "webcam"],  # позволяет выбрать загрузку или веб-камеру
                             value=video_path,
-                            height=512
+                            height=736
                         )
                         frame_skip_slider = gr.Slider(1, 10, value=4, step=1, label="Обрабатывать каждый n-й кадр")
                         btn_vid = gr.Button("Запустить обработку")
 
                         btn_vid.click(
-                            gradio_video_processing,
+                            gradio_video_processing2,
                             inputs=[video_io, confidence_slider, nms_slider, max_size_slider, frame_skip_slider],
                             outputs=video_io,
                         )

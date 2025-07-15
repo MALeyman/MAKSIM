@@ -125,7 +125,7 @@ class_names = [
 
 
 def get_segmentation_tab():
-    with gr.Blocks() as tab:
+
         gr.Markdown("## Сегментация изображений (Итоговая аттестация)")
         gr.Markdown("---")
         with gr.Row():
@@ -138,8 +138,7 @@ def get_segmentation_tab():
                 input_image = gr.Image(type="pil", value=image_path, label="Исходное изображение", height=320)
                 output_image = gr.Image(label="Результат сегментации")
         btn.click(fn=segment_and_overlay, inputs=[input_image, selected], outputs=output_image)
-    return tab
-
+  
 
 
 
