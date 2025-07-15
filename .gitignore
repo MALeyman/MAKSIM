@@ -29,3 +29,15 @@ ML/10_k_means/train_clustered.csv
 ML/13_gradient_1/dataset_smoking/
 ML/12_Random_forest/dataset_smoking/
 ML/0000_attestation/dataset1.csv
+Attestation/models/
+DL/4_Unet/dataset_2/
+Attestation/videos/
+Attestation/model/__pycache__/
+Attestation/utils/__pycache__/
+Attestation/gradio_projects/projects/files/__pycache__/
+Attestation/model_unet_pp copy.ipynb
+Attestation/data/__pycache__/
+Attestation/gradio_projects/__pycache__/
+Attestation/gradio_projects/projects/__pycache__/
+Attestation/gradio_projects/projects/common/__pycache__/
+Attestation/.gradio/
