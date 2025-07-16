@@ -9,3 +9,5 @@ pillow
 gradio
 opencv-python
 onnx
+torchsummary
+segmentation_models_pytorch
